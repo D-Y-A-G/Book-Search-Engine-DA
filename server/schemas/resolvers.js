@@ -4,13 +4,6 @@ const { signToken } = require("../utils/auth");
 
 const resolvers = {
   Query: {
-    Users: async () => {
-      return User.find();
-    },
-
-    User: async (parent, { userId }) => {
-      return User.findOne({ _id: UserId });
-    },
     // By adding context to our query, we can retrieve the logged in user without specifically searching for them
     me: async (parent, args, context) => {
       if (context.user) {
@@ -45,11 +38,7 @@ const resolvers = {
     },
 
     // Add a third argument to the resolver to access data in our `context`
-    saveBook: async (
-      parent,
-      { authors, description, title, bookId, image, link },
-      context
-    ) => {
+    saveBook: async (parent, { input }, context) => {
       // If context has a `user` property, that means the user executing this mutation has a valid JWT and is logged in
       if (context.user) {
         return User.findOneAndUpdate(
@@ -69,7 +58,12 @@ const resolvers = {
     // Set up mutation so a logged in user can only remove their profile and no one else's
     removeBook: async (parent, { bookId }, context) => {
       if (context.user) {
-        return Profile.findOneAndDelete({ bookId: bookId });
+        const updatedUser = await User.findByIdAndDelete(
+          { _id: context.user._id },
+          { $pull: { savedBooks: bookId } },
+          { new: true }
+        );
+        return updatedUser;
       }
       throw new AuthenticationError("You need to be logged in!");
     },
