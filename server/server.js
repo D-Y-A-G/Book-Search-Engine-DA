@@ -1,8 +1,8 @@
 const express = require("express");
 const path = require("path");
-const db = require("./config/connection");
+const mongoose = require("mongoose");
 const { ApolloServer } = require("apollo-server-express");
-// const routes = require('./routes');
+// const db = require("./config/connection");
 
 const { typeDefs, resolvers } = require("./schemas");
 const { authMiddleware } = require("./utils/auth");
@@ -22,7 +22,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 mongoose.connect(
-  process.env.MONGODB_URI || "mongodb://localhost/book-search-engine-da",
+  process.env.MONGODB_URI ||
+    "mongodb://localhost:127.0.0.1:27017/book-search-engine",
   {
     useNewUrlParser: true,
     useUnifiedTopology: true,
@@ -30,6 +31,8 @@ mongoose.connect(
     useFindAndModify: false,
   }
 );
+
+const db = mongoose.connection;
 
 // if we're in production, serve client/build as static assets
 if (process.env.NODE_ENV === "production") {
@@ -49,6 +52,6 @@ db.once("open", () => {
   });
 });
 
-// db.once('open', () => {
+// db.once("open", () => {
 //   app.listen(PORT, () => console.log(`🌍 Now listening on localhost:${PORT}`));
 // });
