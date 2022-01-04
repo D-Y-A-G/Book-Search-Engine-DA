@@ -4,15 +4,12 @@
   "description": "",
   "main": "server/server.js",
   "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "if-env NODE_ENV=production && npm run production || npm run develop",
     "production": "cd server && npm start",
     "develop": "concurrently \"cd server && npm run watch\" \"cd client && npm start\"",
     "install": "cd server && npm i && cd ../client && npm i",
     "heroku-postbuild": "cd client && npm run build"
-  },
-  "repository": {
-    "type": "git",
-    "url": ""
   },
   "keywords": [],
   "author": "",
@@ -22,7 +19,6 @@
     "if-env": "^1.0.4"
   },
   "dependencies": {
-    "apollo-server-express": "^2.15.0",
     "concurrently": "^5.2.0"
   }
 }
