@@ -1,5 +1,5 @@
 const { AuthenticationError } = require("apollo-server-express");
-const { User } = require("../models");
+const { User, Book } = require("../models");
 const { signToken } = require("../utils/auth");
 
 const resolvers = {
@@ -7,15 +7,15 @@ const resolvers = {
     // By adding context to our query, we can retrieve the logged in user without specifically searching for them
     me: async (parent, args, context) => {
       if (context.user) {
-        return User.findOne({ _id: context.user._id });
+        return User.findOne({ _id: context.user._id }).populate("books");
       }
       throw new AuthenticationError("You need to be logged in!");
     },
   },
 
   Mutation: {
-    addUser: async (parent, { username, email, password }) => {
-      const user = await User.create({ username, email, password });
+    addUser: async (parent, args) => {
+      const user = await User.create(args);
       const token = signToken(user);
 
       return { token, user };
@@ -24,13 +24,13 @@ const resolvers = {
       const user = await User.findOne({ email });
 
       if (!user) {
-        throw new AuthenticationError("No user with this email found!");
+        throw new AuthenticationError("Please try to input user again!");
       }
 
       const correctPw = await user.isCorrectPassword(password);
 
       if (!correctPw) {
-        throw new AuthenticationError("Incorrect password!");
+        throw new AuthenticationError("Please try to input password again!");
       }
 
       const token = signToken(user);
@@ -38,13 +38,13 @@ const resolvers = {
     },
 
     // Add a third argument to the resolver to access data in our `context`
-    saveBook: async (parent, { input }, context) => {
+    saveBook: async (parent, { book }, context) => {
       // If context has a `user` property, that means the user executing this mutation has a valid JWT and is logged in
       if (context.user) {
         return User.findOneAndUpdate(
-          { _id: profileId },
+          { _id: user._id },
           {
-            $addToSet: { authors, description, title, bookId, image, link },
+            $addToSet: { savedBooks: book },
           },
           {
             new: true,
@@ -56,7 +56,7 @@ const resolvers = {
       throw new AuthenticationError("You need to be logged in!");
     },
     // Set up mutation so a logged in user can only remove their profile and no one else's
-    removeBook: async (parent, { bookId }, context) => {
+    removeBook: async (parent, { book }, context) => {
       if (context.user) {
         const updatedUser = await User.findByIdAndDelete(
           { _id: context.user._id },
