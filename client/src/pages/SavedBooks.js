@@ -6,7 +6,7 @@ import {
   Card,
   Button,
 } from "react-bootstrap";
-import { useMutation, useQuery } from "@apollo/react-hooks";
+import { useMutation, useQuery } from "@apollo/client";
 import { getMe, deleteBook } from "../utils/API";
 import Auth from "../utils/auth";
 import { removeBookId, saveBookIds } from "../utils/localStorage";
@@ -16,6 +16,7 @@ import { REMOVE_BOOK } from "../utils/mutations";
 const SavedBooks = () => {
   // const [userData, setUserData] = useState({});
   const { loading, data } = useQuery(GET_ME);
+
   const userData = data?.me || [];
 
   // use this to determine if `useEffect()` hook needs to run again
@@ -57,7 +58,7 @@ const SavedBooks = () => {
     }
 
     try {
-      const response = await removeBook({ variables: { bookId: bookId } });
+      const response = await removeBook({ variables: { bookId } });
 
       if (!response.ok) {
         throw new Error("something went wrong!");
@@ -73,8 +74,8 @@ const SavedBooks = () => {
   };
 
   // if data isn't here yet, say so
-  if (!userDataLength) {
-    return <h2>LOADING...</h2>;
+  if (loading) {
+    return <h2>LOADING BOOKS...</h2>;
   }
 
   return (

@@ -10,8 +10,9 @@ import {
 } from "react-bootstrap";
 import { useMutation, useQuery } from "@apollo/client";
 import Auth from "../utils/auth";
-import { saveBook, searchGoogleBooks } from "../utils/API";
+import { searchGoogleBooks } from "../utils/API";
 import { saveBookIds, getSavedBookIds } from "../utils/localStorage";
+import { GET_ME } from "../utils/queries";
 import { SAVE_BOOK } from "../utils/mutations";
 
 const SearchBooks = () => {
@@ -62,7 +63,7 @@ const SearchBooks = () => {
   };
 
   // create function to handle saving a book to our database
-  const [saveBook, { error }] = useMutation(SAVE_BOOK);
+  const [saveBook] = useMutation(SAVE_BOOK);
 
   const handleSaveBook = async (bookId) => {
     // find the book in `searchedBooks` state by the matching id
@@ -76,7 +77,16 @@ const SearchBooks = () => {
     }
 
     try {
-      const response = await saveBook({ variables: { input: bookToSave } });
+      const response = await saveBook({
+        variables: { book: bookToSave },
+        update: (cache) => {
+          const { me } = cache.readQuery({ query: GET_ME });
+          cache.writeQuery({
+            query: GET_ME,
+            data: { me: { ...me, savedBooks: [...me.savedBooks, bookToSave] } },
+          });
+        },
+      });
 
       if (!response.ok) {
         throw new Error("something went wrong!");
